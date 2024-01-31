@@ -5,8 +5,10 @@ import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-from data import *
-from models import *
+from delta_shapley.data import *
+from delta_shapley.models import *
+from delta_shapley.train import train
+from delta_shapley.val import evaluate_model
 from monte_carlo.MonteCarloShapley import MonteCarloShapley
 import torch
 import time
@@ -72,7 +74,7 @@ if __name__ == '__main__':
     trainset, testset, num_classes = load_data(params, binary_trainsize=params.datasize, binary_testsize=params.datasize)
 
     print("loaded trainset")
-    MC = MonteCarloShapley(trainset, testset, L = 1,  beta = 1, c = 1, a = 0.05, b = 0.05, sup = 5, num_classes = num_classes, params = params)
+    MC = MonteCarloShapley(trainset, testset, L = 1,  beta = 1, c = 1, a = 0.05, b = 0.05, sup = 5, num_classes = num_classes, params = params, train_func = train, val_func = evaluate_model)
     print("starting run")
     start = time.time()
     shapleyvalues = MC.run(params.eval_datapoint_ids, params)
