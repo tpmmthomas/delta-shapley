@@ -17,7 +17,7 @@ def load_data(params, binary_trainsize=2000, binary_testsize=1000):
         
         transform=torchvision.transforms.Compose([torchvision.transforms.ToTensor(),torchvision.transforms.Normalize((0.1307,), (0.3081,))])
         
-        dataset = torchvision.datasets.MNIST(root='../mnist', train=True, download=False, transform=transform)
+        dataset = torchvision.datasets.MNIST(root='/tmp/mnist', train=True, download=False, transform=transform)
 
         print('Loaded MNIST data, datasize:', len(dataset))
         train_size=math.floor(len(dataset)*0.8)
@@ -33,7 +33,7 @@ def load_data(params, binary_trainsize=2000, binary_testsize=1000):
         
         transform=torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
         
-        dataset = torchvision.datasets.FashionMNIST(root='../../fashionmnist', train=True, download=False, transform=transform)
+        dataset = torchvision.datasets.FashionMNIST(root='/tmp/fashionmnist', train=True, download=True, transform=transform)
 
         print('Loaded FashionMNIST data, datasize:', len(dataset))
         train_size=math.floor(len(dataset)*0.8)
@@ -49,7 +49,7 @@ def load_data(params, binary_trainsize=2000, binary_testsize=1000):
         
         transform=torchvision.transforms.Compose([torchvision.transforms.ToTensor(),torchvision.transforms.Normalize((0.5,), (0.5,))])
         
-        dataset = torchvision.datasets.FashionMNIST(root='../fashionmnist', train=True, download=False, transform=transform)
+        dataset = torchvision.datasets.FashionMNIST(root='/tmp/fashionmnist', train=True, download=False, transform=transform)
 
         train_data, test_data = [],[]
         count_0,count_6 = 0,0

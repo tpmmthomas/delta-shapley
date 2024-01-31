@@ -1,5 +1,4 @@
 from torch.utils.data import Subset, DataLoader, SequentialSampler
-import argparse
 import os
 import sys
 import inspect
@@ -8,7 +7,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 from data import *
 from models import *
-import math
+import tqdm
 import torch
 import torch.nn.functional as F
 from torch import optim
@@ -66,9 +65,9 @@ class MonteCarloShapley():
         iter = 1
         while (not self.check_convergence_rolling(iter, datapoints)) and iter < 2 * 10e5:
             row_iteration = dict()
-            if iter % 10 == 0:
+            if iter % 1 == 0:
                 print("Monte Carlo running in iteration {}".format(iter))
-            for i in range(len(datapoints)):
+            for i in tqdm.tqdm(range(len(datapoints))):
                 datapoint = datapoints[i]
                 if len(self.SVdf) > 0:
                     est_shapley = self.SVdf.iloc[-1][str(datapoint)+"_SV"]
@@ -112,31 +111,34 @@ class MonteCarloShapley():
             indices: the indices of the train dataset to be used as a sample
             datapoint: the index of the evaluated datapoint
         """
+        print(f"Training with {len(indices)} data point.")
         # compute a random point to insert the differing datapoint
         random_idx = np.random.randint(0, len(indices))
 
-        # train model without datapoint
+        # model without datapoint
         sample = Subset(self.trainset, list(indices))
         sampler = SequentialSampler(sample)
         trainloader = DataLoader(sample, batch_size=1, sampler=sampler)
-        model = return_model(params, num_classes)
-        trained = self.train(model, trainloader, params)
-
+        model = return_model(params, num_classes).to("cuda")
         # insert in differential datapoint
         if random_idx == 0:
             indices_incl_datapoint = np.concatenate(([datapoint_idx], indices))
         else:
             indices_incl_datapoint = np.concatenate((np.concatenate((indices[:random_idx], [datapoint_idx])), indices[random_idx:]))
-        # train model
+        # model with datapoint 
         sample_datapoint = Subset(self.trainset, list(indices_incl_datapoint))
         sampler_datapoint = SequentialSampler(sample_datapoint)
         trainloader_datapoint = DataLoader(sample_datapoint, batch_size=1, sampler=sampler_datapoint)
-        model_datapoint = return_model(params, num_classes)
+        model_datapoint = return_model(params, num_classes).to("cuda")
+        
+        # Train model
+        trained = self.train(model, trainloader, params)
         trained_datapoint = self.train(model_datapoint, trainloader_datapoint, params)
+        
         marginal_contribution = self.evaluate(trained, trained_datapoint, params)
         return marginal_contribution
 
-    def train(self, model, dataloader, params):
+    def train(self, model, dataloader, params,device="cuda"):
         """
         Training loop for NNs
         Args:
@@ -155,8 +157,8 @@ class MonteCarloShapley():
                 model.zero_grad()
                 optimizer.zero_grad()
                 if params.device != 'cpu':
-                    images = images.cuda()
-                    targets = targets.cuda()
+                    images = images.to(device)
+                    targets = targets.to(device)
                 output = model(images)
                 loss = F.cross_entropy(output, targets, reduction='mean')
                 loss.backward()

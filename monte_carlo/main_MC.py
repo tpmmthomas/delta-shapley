@@ -9,6 +9,7 @@ from data import *
 from models import *
 from monte_carlo.MonteCarloShapley import MonteCarloShapley
 import torch
+import time
 import os
 import pandas as pd
 
@@ -42,11 +43,11 @@ def get_parser():
     parser.add_argument("--dataset", type=str, default='fashionmnist')
     parser.add_argument("--model", type=str, default='cnn')
     parser.add_argument("--pretrain", type=bool_flag, default=False)
-    parser.add_argument("--datasize", type=int, default=2000)
+    parser.add_argument("--datasize", type=int, default=100)
 
 
     # training parameters
-    parser.add_argument("--epochs", type=int, default=20)
+    parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=0.01)
     # give index of datapoint to be evaluated
@@ -69,10 +70,13 @@ if __name__ == '__main__':
         print("New directory created!")
 
     trainset, testset, num_classes = load_data(params, binary_trainsize=params.datasize, binary_testsize=params.datasize)
+
     print("loaded trainset")
     MC = MonteCarloShapley(trainset, testset, L = 1,  beta = 1, c = 1, a = 0.05, b = 0.05, sup = 5, num_classes = num_classes, params = params)
     print("starting run")
+    start = time.time()
     shapleyvalues = MC.run(params.eval_datapoint_ids, params)
-
+    end = time.time()
 
     print("Shapley Value of datapoints: " + str(params.eval_datapoint_ids)+" is "+ str(shapleyvalues))
+    print("Total time taken: " + str(end-start) + " seconds")
