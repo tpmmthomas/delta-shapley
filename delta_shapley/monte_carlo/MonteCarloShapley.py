@@ -36,6 +36,11 @@ class Shapley():
         self.train_func = train_func
         self.val_func = val_func
         
+    def train_and_evaluate(self, num_classes,trainloader, testloader, params):
+        trained = self.train_func(models.return_model,num_classes, trainloader, params)
+        val =  self.val_func(trained, testloader, params)
+        return val
+        
     def compute(self, indices, datapoint_idx, num_classes, params):
         """
         Compute the marginal contribution of a datapoint to a sample
@@ -48,7 +53,7 @@ class Shapley():
         # compute a random point to insert the differing datapoint
         random_idx = np.random.randint(0, len(indices))
 
-        # model without datapoint
+        # Dataset without datapoint
         sample = Subset(self.trainset, list(indices))
         sampler = SequentialSampler(sample)
         trainloader = DataLoader(sample, batch_size=1, sampler=sampler)
@@ -58,25 +63,17 @@ class Shapley():
             indices_incl_datapoint = np.concatenate(([datapoint_idx], indices))
         else:
             indices_incl_datapoint = np.concatenate((np.concatenate((indices[:random_idx], [datapoint_idx])), indices[random_idx:]))
-        # model with datapoint 
+        # Dataset with datapoint 
         sample_datapoint = Subset(self.trainset, list(indices_incl_datapoint))
         sampler_datapoint = SequentialSampler(sample_datapoint)
         trainloader_datapoint = DataLoader(sample_datapoint, batch_size=1, sampler=sampler_datapoint)
         
-        with Pool(2) as pool:
-            res1 = pool.apply_async(self.train_func, (models.return_model,num_classes, trainloader, params))
-            res2 = pool.apply_async(self.train_func, (models.return_model,num_classes, trainloader_datapoint, params))
-            pool.close()
-            pool.join()
-            
-        trained = res1.get()
-        trained_datapoint = res2.get()
-        
+        #Test Dataset
         testloader = DataLoader(self.testset, batch_size=params.batch_size, shuffle=False)
         
         with Pool(2) as pool:
-            res3 = pool.apply_async(self.val_func, (trained, testloader, params))
-            res4 = pool.apply_async(self.val_func, (trained_datapoint, testloader, params))
+            res3 = pool.apply_async(self.train_and_evaluate, (num_classes, trainloader,testloader, params))
+            res4 = pool.apply_async(self.train_and_evaluate, (num_classes, trainloader_datapoint, testloader, params))
             pool.close()
             pool.join()
             

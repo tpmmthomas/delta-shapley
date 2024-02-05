@@ -53,8 +53,8 @@ def get_parser():
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=0.01)
     # give index of datapoint to be evaluated
-    parser.add_argument("--datapoint", type = int, default = 0)
-    parser.add_argument("--eval_datapoint_ids", type = list, default = [i for i in range(10)])
+    parser.add_argument("--datapoint", type = int, default = 0) #seems useless
+    parser.add_argument("--eval_datapoint_ids", type = list, default = [i for i in range(1)])
 
 
     return parser

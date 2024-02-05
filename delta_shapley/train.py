@@ -14,7 +14,7 @@ def train(return_model, num_class, dataloader, params):
     Return model
     """
     print("Creating model")
-    model = return_model(params,num_class)
+    model = return_model(params,num_class).to(params.device)
     optimizer = optim.SGD(model.parameters(), lr=params.learning_rate, momentum=0)
     lr_lambda = lambda epoch: params.learning_rate / (epoch + 1)
     #scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
